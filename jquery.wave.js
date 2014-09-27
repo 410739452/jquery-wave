@@ -1,9 +1,4 @@
-/**
- * 模拟声波效果的动画
- * @param  {jQuery} $
- * @author zpf
- */
-;(function($) {
+(function($) {
 	
 	function Wave(options) {
 		this.setOptions(options);
@@ -13,11 +8,12 @@
 		constructor: Wave,
 		// 设置参数
 		setOptions: function(options) {
+			var self = this;
 			this.options = $.extend({
 				element: null,
 				className: 'wave', 				// 波的样式
 				shape: 'rectangle', 			// 形状 [rectangle, circle]
-				fromBorderColor: '#005EAB',		// 波初始的边框颜色
+				fromBorderColor: '#A2B4C4',		// 波初始的边框颜色
 				toBorderColor: 'transparent',	// 波消失的边框颜色
 				fromWidth: 0,					// 设置波源的宽度,只在[shape=rectangle]时有效,值为0则自动计算,取所选元素宽度值的一半
 				fromHeight: 0,					// 设置波源的宽度,只在[shape=rectangle]时有效,值为0则自动计算,取所选元素高度值的一半
@@ -25,10 +21,11 @@
 				amplitude: 15, 					// 振幅 单位：px
 				cycle: 1000,					// 周期 单位：毫秒
 				frequency: 1, 					// 频率 单位：次数
-				lifecycle: 4000					// 波的生命值  单位：毫秒
+				lifecycle: 4000,				// 波的生命值  单位：毫秒
+				stopOnHover: true				// hover时是否停止动画
 			}, this.options, options||{});
 
-			this.element = $(this.options.element).css({position:"relative", zIndex: 1});		
+			this.element = $(this.options.element).css({position:"relative", zIndex: 1});
 		},
 		// 获取波源位置
 		_getFromBounds: function() {
@@ -45,7 +42,7 @@
 				fromBorderRadius = this.options.fromBorderRadius===0 ? 2 : this.options.fromBorderRadius;
 			};
 			if(this.options.shape == "circle") {
-				fromBorderRadius = this.options.fromBorderRadius===0 ? Math.min(elemWidth, elemHeight) : this.options.fromBorderRadius;
+				fromBorderRadius = this.options.fromBorderRadius===0 ? Math.min(elemWidth, elemHeight)/2 : this.options.fromBorderRadius;
 				fromWidth = fromHeight = fromBorderRadius*2;
 			};
 
@@ -71,6 +68,14 @@
 		start: function() {
 			var self = this;
 			if(self.intervalId) {return};
+
+			if(this.options.stopOnHover) {
+				this.element.on("mouseenter", function(){
+					self.stop(true);
+				}).on("mouseleave", function() {
+					self.start();
+				});
+			};
 
 			self.intervalId = setInterval(function() {
 				
@@ -104,19 +109,24 @@
 
 			}, self.options.cycle/self.options.frequency );
 		},
-		stop: function() {
-			clearInterval(this.intervalId);
-			this.intervalId = null;
+		stop: function(stopOnHover) {
+			if(this.intervalId != null) {
+				clearInterval(this.intervalId);
+				this.intervalId = null;
+				if(stopOnHover!==true) {
+					this.element.off("mouseenter mouseleave");
+				}
+			}
 		}
 	};
 
-	$.fn.wave = function(options) {
+	$.fn.wave = function(options, params) {
 		this.each(function() {
 			var wave = $(this).data("wave");
 			var isMethod = typeof options === "string";
 			if(wave) {
 				if(isMethod) {
-					wave[options]();
+					wave[options](params);
 					return;
 				} else {
 					wave.setOptions(options);
