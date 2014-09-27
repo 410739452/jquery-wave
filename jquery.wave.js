@@ -1,4 +1,9 @@
-(function($) {
+/**
+ * 模拟声波效果的动画
+ * @param  {jQuery} $
+ * @author zpf
+ */
+;(function($) {
 	
 	function Wave(options) {
 		this.setOptions(options);
