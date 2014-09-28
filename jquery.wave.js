@@ -17,6 +17,8 @@
 				toBorderColor: 'transparent',	// 波消失的边框颜色
 				fromWidth: 0,					// 设置波源的宽度,只在[shape=rectangle]时有效,值为0则自动计算,取所选元素宽度值的一半
 				fromHeight: 0,					// 设置波源的宽度,只在[shape=rectangle]时有效,值为0则自动计算,取所选元素高度值的一半
+				fromBorderWidth: 0,				// 初始波宽度
+				toBorderWidth: 5,				// 结束时波宽度
 				fromBorderRadius: 0,			// 设置波源的边框radius,值为0则自动计算,当[shape=rectangle]时,值取2, 当[shape=circle]时,取所选元素高度和宽度中值最小的
 				amplitude: 15, 					// 振幅 单位：px
 				cycle: 1000,					// 周期 单位：毫秒
@@ -30,8 +32,8 @@
 		// 获取波源位置
 		_getFromBounds: function() {
 			var elemOffset = this.element.offset();
-				elemWidth = this.element.innerWidth(),
-				elemHeight = this.element.innerHeight(),
+				elemWidth = this.element.outerWidth(true),
+				elemHeight = this.element.outerHeight(true),
 				fromWidth = elemWidth,
 				fromHeight = elemHeight,
 				fromBorderRadius = 0;
@@ -49,8 +51,8 @@
 			return {
 				width: fromWidth,
 				height: fromHeight,
-				top: elemOffset.top + (elemHeight - fromHeight)/2,
-				left: elemOffset.left + (elemWidth - fromWidth)/2,
+				top: elemOffset.top + (elemHeight - fromHeight)/2-1,
+				left: elemOffset.left + (elemWidth - fromWidth)/2-1,
 				radius: fromBorderRadius
 			};
 		},
@@ -60,8 +62,8 @@
 			return {
 				width: fromBounds.width + this.options.amplitude*2,
 				height: fromBounds.height + this.options.amplitude*2,
-				top: fromBounds.top - this.options.amplitude,
-				left: fromBounds.left - this.options.amplitude,
+				top: fromBounds.top - this.options.amplitude-3,
+				left: fromBounds.left - this.options.amplitude-3,
 				radius: this.options.shape == "rectangle" ? fromBounds.radius : fromBounds.radius + this.options.amplitude
 			};
 		},		
@@ -81,7 +83,7 @@
 				
 				var fromBounds = self._getFromBounds(),
 					toBounds = self._getToBounds(),
-					line = $('<div></div>').addClass(self.options.className).appendTo(document.body);
+					line = $('<div></div>');
 
 				line.css({
 					position: "absolute",
@@ -89,18 +91,19 @@
 					height: fromBounds.height,
 					top: fromBounds.top,
 					left: fromBounds.left,
-					borderWidth: 1,
 					borderStyle: 'solid',
 					zIndex: 0,
+					borderWidth: self.options.fromBorderWidth,
 					borderColor: self.options.fromBorderColor,
 					borderRadius: fromBounds.radius
-				});
+				}).addClass(self.options.className).appendTo(document.body);
 
 				line.animate({
 					width: toBounds.width,
 					height: toBounds.height,
 					top: toBounds.top,
 					left: toBounds.left,
+					borderWidth: self.options.toBorderWidth,
 					borderColor: self.options.toBorderColor,
 					borderRadius: toBounds.radius
 				}, self.options.lifecycle, "easeOutBack", function() {
@@ -113,7 +116,7 @@
 			if(this.intervalId != null) {
 				clearInterval(this.intervalId);
 				this.intervalId = null;
-				if(stopOnHover!==true) {
+				if(stopOnHover!=true) {
 					this.element.off("mouseenter mouseleave");
 				}
 			}
